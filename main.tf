@@ -37,7 +37,7 @@ resource "azurerm_cognitive_account" "openai" {
   location                      = "eastus"
   name                          = "openai"
   public_network_access_enabled = false
-  resource_group_name           = "azurerm_resource_group.rg.name"
+  resource_group_name           = azurerm_resource_group.rg.name
   sku_name                      = "S0"
   depends_on = [
     azurerm_resource_group.rg,
@@ -81,7 +81,7 @@ resource "azurerm_key_vault" "app-openai-keyvault" {
   enabled_for_template_deployment = true
   location                        = "eastus"
   name                            = "openai-keyvault"
-  resource_group_name             = "azurerm_resource_group.rg.name"
+  resource_group_name             =  azurerm_resource_group.rg.name
   sku_name                        = "standard"
   tenant_id                       = data.azurerm_client_config.current.tenant_id
   depends_on = [
