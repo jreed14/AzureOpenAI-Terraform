@@ -31,7 +31,7 @@ resource "azurerm_subnet" "endpoint" {
 
 
 
-resource "azurerm_cognitive_account" "openai-tf-build" {
+resource "azurerm_cognitive_account" "openai" {
   custom_subdomain_name         = "openai-tf-build"
   kind                          = "OpenAI"
   location                      = "eastus"
@@ -107,7 +107,7 @@ resource "azurerm_private_endpoint" "openai-private-endpoint" {
   custom_network_interface_name = "openai-pvtendpoint-nic"
   location                      =  azurerm_resource_group.rg.location
   name                          = "openai-pvtendpoint"
-  resource_group_name           = "openai"
+  resource_group_name           = azurerm_resource_group.rg.name
   subnet_id                     = azurerm_subnet.endpoint.id
   private_service_connection {
     is_manual_connection           = false
