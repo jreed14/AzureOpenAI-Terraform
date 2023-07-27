@@ -35,7 +35,7 @@ resource "azurerm_cognitive_account" "openai" {
   custom_subdomain_name         = "openai"
   kind                          = "OpenAI"
   location                      = "eastus"
-  name                          = "openai"
+  name                          = "jrdev-openai-tf-build"
   public_network_access_enabled = false
   resource_group_name           = azurerm_resource_group.rg.name
   sku_name                      = "S0"
