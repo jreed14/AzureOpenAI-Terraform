@@ -1,12 +1,12 @@
 resource "azurerm_resource_group" "rg" {
   location = "eastus"
-  name     = "openai-rg"
+  name     = "openai-rg-terraform"
 }
 
 resource "azurerm_virtual_network" "ai_workloads_vnet" {
   name                         = "azure_openai_network"
   address_space                = ["10.0.0.0/16"]
-  location                     = azurerm_resouce_group.rg.location
+  location                     = azurerm_resource_group.rg.location
   resource_group_name          = azurerm_resource_group.rg.name
 
 }
@@ -83,40 +83,36 @@ resource "azurerm_key_vault" "app-openai-keyvault" {
   name                            = "openai-keyvault"
   resource_group_name             = "openai"
   sku_name                        = "standard"
-  tenant_id                       = data.azurerm_client-configuration.current.tenant_id
+  tenant_id                       = data.azurerm_client_config.current.tenant_id
   depends_on = [
     azurerm_resource_group.rg,
   ]
 
 
-resource "azurerm_private_dns_zone" "private_zone_ai_vnet" {
-  name                = "privatelink.blob.core.windows.net"
-  resource_group_name = azurerm_resource_group.example.name
+// resource "azurerm_private_dns_zone" "private_zone_ai_vnet" {
+//  name                = "privatelink.blob.core.windows.net"
+//  resource_group_name = azurerm_resource_group.example.name
 
-}
+// }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_AI-vnet" {
-  name                  = "virtual-network-dns-link"
-  resource_group_name   = azurerm_resource_group.rg.name
-  private_dns_zone_name = azurerm_private_dns_zone.private_zone_ai_vnet.name
-  virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
-}
+//resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_AI-vnet" {
+//  name                  = "virtual-network-dns-link"
+//  resource_group_name   = azurerm_resource_group.rg.name
+//  private_dns_zone_name = azurerm_private_dns_zone.private_zone_ai_vnet.name
+//  virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
+//}
 
 }
 resource "azurerm_private_endpoint" "openai-private-endpoint" {
   custom_network_interface_name = "openai-pvtendpoint-nic"
-  location                      =  azurerm_resouce_group.rg.location
+  location                      =  azurerm_resource_group.rg.location
   name                          = "openai-pvtendpoint"
   resource_group_name           = "openai"
   subnet_id                     = azurerm_subnet.endpoint.id
-  private_dns_zone_group {
-    name                 = "default"
-    private_dns_zone_ids = [azurerm_private_dns_zone.example.id]
-  }
   private_service_connection {
     is_manual_connection           = false
     name                           = "openai-pvtendpoint"
-    private_connection_resource_id = azurerm_cognitive_deployment.openai.id
+    private_connection_resource_id = azurerm_cognitive_account.openai.id
     subresource_names              = ["account"]
   }
   depends_on = [
