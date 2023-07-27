@@ -47,7 +47,7 @@ resource "azurerm_cognitive_deployment" "gpt-35-deployment" {
   cognitive_account_id =  azurerm_cognitive_account.openai.id
   name                 = "test-chat-model"
   rai_policy_name      = "Microsoft.Default"
-  capacity             = "100"
+
   model {
     format  = "OpenAI"
     name    = "gpt-35-turbo"
@@ -55,6 +55,7 @@ resource "azurerm_cognitive_deployment" "gpt-35-deployment" {
   }
   scale {
     type = "Standard"
+    capacity             = "100"
   }
   depends_on = [
     azurerm_cognitive_account.openai,
@@ -63,7 +64,6 @@ resource "azurerm_cognitive_deployment" "gpt-35-deployment" {
 resource "azurerm_cognitive_deployment" "code-davinci-deployment" {
   cognitive_account_id =  azurerm_cognitive_account.openai.id
   name                 = "test-deployment-model"
-  capacity             = "100"
   model {
     format  = "OpenAI"
     name    = "code-davinci-002"
@@ -71,6 +71,7 @@ resource "azurerm_cognitive_deployment" "code-davinci-deployment" {
   }
   scale {
     type = "Standard"
+    capacity             = "100"
   }
   depends_on = [
     azurerm_cognitive_account.openai,
