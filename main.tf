@@ -29,7 +29,59 @@ resource "azurerm_subnet" "endpoint" {
   enforce_private_link_service_network_policies = true
 }
 
+resource "azurerm_subnet" "bastion_subnet" {
+name                   = "AzureBastionSubnet"
+resource_group_name    = azurerm_resource_group.rg.name
+virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
 
+address_prefixes     = ["10.0.3.0/24"]
+
+  enforce_private_link_service_network_policies = true
+
+}
+
+resource "azurerm_subnet" "APIManagementSubnet" {
+name                   = "APIManagementSubnet"
+resource_group_name    = azurerm_resource_group.rg.name
+virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
+
+address_prefixes     = ["10.0.4.0/24"]
+
+  enforce_private_link_service_network_policies = true
+
+}
+
+resource "azurerm_virtual_machine" "main" {
+  name                  = "${var.prefix}-vm"
+  location              = azurerm_resource_group.example.location
+  resource_group_name   = azurerm_resource_group.example.name
+  network_interface_ids = [azurerm_network_interface.main.id]
+  vm_size               = "Standard_DS1_v2"
+
+  storage_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "20.04-LTS"
+    version   = "latest"
+  }
+  storage_os_disk {
+    name              = "myosdisk1"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+  }
+  os_profile {
+    computer_name  = "hostname"
+    admin_username = "testadmin"
+    admin_password = "Password1234!"
+  }
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+  tags = {
+    environment = "staging"
+  }
+}
 
 resource "azurerm_cognitive_account" "openai" {
   custom_subdomain_name         = "openai-tf-build"
@@ -55,7 +107,6 @@ resource "azurerm_cognitive_deployment" "gpt-35-deployment" {
   }
   scale {
     type = "Standard"
-    capacity             = "100"
   }
   depends_on = [
     azurerm_cognitive_account.openai,
@@ -69,9 +120,8 @@ resource "azurerm_cognitive_deployment" "code-davinci-deployment" {
     name    = "code-davinci-002"
     version = "1"
   }
-  scale {
+scale {
     type = "Standard"
-    capacity             = "100"
   }
   depends_on = [
     azurerm_cognitive_account.openai,
