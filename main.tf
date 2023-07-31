@@ -53,17 +53,18 @@ address_prefixes     = ["10.0.4.0/24"]
 
 resource "azurerm_virtual_machine" "main" {
   name                  = "${var.prefix}-vm"
-  location              = azurerm_resource_group.example.location
-  resource_group_name   = azurerm_resource_group.example.name
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.main.id]
   vm_size               = "Standard_DS1_v2"
-
-  storage_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "20.04-LTS"
+  
+  source_image_reference {
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2022-datacenter-azure-edition"
     version   = "latest"
   }
+ 
   storage_os_disk {
     name              = "myosdisk1"
     caching           = "ReadWrite"
@@ -75,11 +76,22 @@ resource "azurerm_virtual_machine" "main" {
     admin_username = "testadmin"
     admin_password = "Password1234!"
   }
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
+ 
   tags = {
     environment = "staging"
+  }
+}
+
+
+resource "azurerm_network_interface" "main" {
+  name                = "${var.prefix}-nic"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "testconfiguration1"
+    subnet_id                     = azurerm_subnet.service.id
+    private_ip_address_allocation = "Dynamic"
   }
 }
 
