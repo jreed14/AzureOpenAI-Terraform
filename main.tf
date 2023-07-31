@@ -58,7 +58,7 @@ resource "azurerm_virtual_machine" "main" {
   network_interface_ids = [azurerm_network_interface.main.id]
   vm_size               = "Standard_DS1_v2"
   
-  source_image_reference {
+  storage_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
     sku       = "2022-datacenter-azure-edition"
@@ -66,20 +66,12 @@ resource "azurerm_virtual_machine" "main" {
   }
  
   storage_os_disk {
-    name              = "myosdisk1"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
+    name                 = "${var.prefix}-vmOsDisk"
+    caching              = "ReadWrite"
+    create_option        = "FromImage"
+    managed_disk_type    = "Standard_LRS"
   }
-  os_profile {
-    computer_name  = "hostname"
-    admin_username = "testadmin"
-    admin_password = "Password1234!"
-  }
- 
-  tags = {
-    environment = "staging"
-  }
+
 }
 
 
