@@ -51,6 +51,18 @@ address_prefixes     = ["10.0.4.0/24"]
 
 }
 
+resource "azurerm_subnet" "computesubnet" {
+name                   = "compute"
+resource_group_name    = azurerm_resource_group.rg.name
+virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
+
+address_prefixes     = ["10.0.5.0/24"]
+
+  enforce_private_link_service_network_policies = true
+
+}
+
+
 resource "azurerm_windows_virtual_machine" "main" {
   name                  = "${var.prefix}-vm"
   location              = azurerm_resource_group.rg.location
@@ -92,7 +104,7 @@ resource "azurerm_network_interface" "main" {
 
   ip_configuration {
     name                          = "testconfiguration1"
-    subnet_id                     = azurerm_subnet.service.id
+    subnet_id                     = azurerm_subnet.computesubnet.id
     private_ip_address_allocation = "Dynamic"
   }
 }
