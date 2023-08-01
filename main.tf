@@ -87,6 +87,27 @@ resource "azurerm_network_interface" "main" {
   }
 }
 
+resource "azurerm_bastion_host" "bastion_host" {
+  name                = "azurebastion"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                 = "configuration"
+    subnet_id            = azurerm_subnet.bastion_subnet.id
+    public_ip_address_id = azurerm_public_ip.bastion_pub_ip.id
+  }
+}
+
+resource "azurerm_public_ip" "bastion_pub_ip" {
+  name                = "bastion_pubip"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+
 resource "azurerm_cognitive_account" "openai" {
   custom_subdomain_name         = "openai-tf-build"
   kind                          = "OpenAI"
@@ -160,6 +181,29 @@ resource "azurerm_key_vault" "app-openai-keyvault" {
 //}
 
 }
+
+
+resource "random_id" "random_id" {
+  keepers = {
+    # Generate a new ID only when a new resource group is defined
+    resource_group = azurerm_resource_group.rg.name
+  }
+
+  byte_length = 8
+}
+
+resource "azurerm_api_management" "apim" {
+  name                = "${var.prefix}-apim-${random_id.random_id.hex}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  publisher_name      = "${var.publisher_name}"
+  publisher_email     = "${var.publisher_email}"
+
+  sku_name = "Developer_1"
+}
+
+
+
 resource "azurerm_private_endpoint" "openai-private-endpoint" {
   custom_network_interface_name = "openai-pvtendpoint-nic"
   location                      =  azurerm_resource_group.rg.location
