@@ -1,6 +1,6 @@
 resource "azurerm_resource_group" "rg" {
   location = "eastus"
-  name     = "openai-rg-terraform"
+  name     = "${var.prefix}-openai-rg-terraform"
 }
 
 resource "azurerm_virtual_network" "ai_workloads_vnet" {
@@ -142,38 +142,8 @@ resource "azurerm_cognitive_account" "openai" {
     azurerm_resource_group.rg,
   ]
 }
-resource "azurerm_cognitive_deployment" "gpt-35-deployment" {
-  cognitive_account_id =  azurerm_cognitive_account.openai.id
-  name                 = "test-chat-model"
-  rai_policy_name      = "Microsoft.Default"
 
-  model {
-    format  = "OpenAI"
-    name    = "gpt-35-turbo"
-    version = "0301"
-  }
-  scale {
-    type = "Standard"
-  }
-  depends_on = [
-    azurerm_cognitive_account.openai,
-  ]
-}
-resource "azurerm_cognitive_deployment" "code-davinci-deployment" {
-  cognitive_account_id =  azurerm_cognitive_account.openai.id
-  name                 = "test-deployment-model"
-  model {
-    format  = "OpenAI"
-    name    = "code-davinci-002"
-    version = "1"
-  }
-scale {
-    type = "Standard"
-  }
-  depends_on = [
-    azurerm_cognitive_account.openai,
-  ]
-}
+
 resource "azurerm_key_vault" "app-openai-keyvault" {
   enable_rbac_authorization       = true
   enabled_for_deployment          = true
@@ -187,22 +157,21 @@ resource "azurerm_key_vault" "app-openai-keyvault" {
   depends_on = [
     azurerm_resource_group.rg,
   ]
-
-
-// resource "azurerm_private_dns_zone" "private_zone_ai_vnet" {
-//  name                = "privatelink.blob.core.windows.net"
-//  resource_group_name = azurerm_resource_group.example.name
-
-// }
-
-//resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_AI-vnet" {
-//  name                  = "virtual-network-dns-link"
-//  resource_group_name   = azurerm_resource_group.rg.name
-//  private_dns_zone_name = azurerm_private_dns_zone.private_zone_ai_vnet.name
-//  virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
-//}
-
 }
+
+ resource "azurerm_private_dns_zone" "private_zone_ai_vnet" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = azurerm_resource_group.rg.name
+
+ }
+
+resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_AI-vnet" {
+  name                  = "virtual-network-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.private_zone_ai_vnet.name
+  virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
+}
+
 
 
 resource "random_id" "random_id" {
