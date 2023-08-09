@@ -17,7 +17,7 @@ resource "azurerm_subnet" "service" {
   virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 
-  enforce_private_link_service_network_policies = true
+  private_link_service_network_policies_enabled = true
 }
 
 resource "azurerm_subnet" "endpoint" {
@@ -26,7 +26,7 @@ resource "azurerm_subnet" "endpoint" {
   virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
   address_prefixes     = ["10.0.2.0/24"]
 
-  enforce_private_link_service_network_policies = true
+  private_link_service_network_policies_enabled = true
 }
 
 resource "azurerm_subnet" "bastion_subnet" {
@@ -36,7 +36,7 @@ virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
 
 address_prefixes     = ["10.0.3.0/24"]
 
-  enforce_private_link_service_network_policies = true
+  private_link_service_network_policies_enabled = true
 
 }
 
@@ -47,7 +47,7 @@ virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
 
 address_prefixes     = ["10.0.4.0/24"]
 
-  enforce_private_link_service_network_policies = true
+  private_link_service_network_policies_enabled = true
 
 }
 
@@ -58,7 +58,7 @@ virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
 
 address_prefixes     = ["10.0.5.0/24"]
 
-  enforce_private_link_service_network_policies = true
+  private_link_service_network_policies_enabled = true
 
 }
 
@@ -143,6 +143,19 @@ resource "azurerm_cognitive_account" "openai" {
   ]
 }
 
+resource "azurerm_cognitive_deployment" "openaideployment" {
+  name                 = "example-cd"
+  cognitive_account_id = azurerm_cognitive_account.openai.id
+  model {
+    format  = "OpenAI"
+    name    = "text-curie-001"
+    version = "1"
+  }
+
+  scale {
+    type = "Standard"
+  }
+}
 
 resource "azurerm_key_vault" "app-openai-keyvault" {
   enable_rbac_authorization       = true
@@ -150,14 +163,17 @@ resource "azurerm_key_vault" "app-openai-keyvault" {
   enabled_for_disk_encryption     = true
   enabled_for_template_deployment = true
   location                        = "eastus"
-  name                            = "jrdev-tf-openai-keyvault"
+  name                            = "${var.prefix}-openai-keyvault"
   resource_group_name             =  azurerm_resource_group.rg.name
   sku_name                        = "standard"
   tenant_id                       = data.azurerm_client_config.current.tenant_id
   depends_on = [
     azurerm_resource_group.rg,
   ]
+  
 }
+
+
 
  resource "azurerm_private_dns_zone" "private_zone_ai_vnet" {
   name                = "privatelink.blob.core.windows.net"
