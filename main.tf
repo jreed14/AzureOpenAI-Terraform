@@ -1,6 +1,6 @@
 resource "azurerm_resource_group" "rg" {
   location = "eastus"
-  name     = "${var.prefix}-openai-rg-terraform"
+  name     = "openai-rg-terraform"
 }
 
 resource "azurerm_virtual_network" "ai_workloads_vnet" {
@@ -82,11 +82,6 @@ resource "azurerm_subnet_network_security_group_association" "basicnsg-to-servic
 
 resource "azurerm_subnet_network_security_group_association" "basicnsg-to-endpointsubnet" {
   subnet_id                 = azurerm_subnet.endpoint.id
-  network_security_group_id = azurerm_network_security_group.basicnsg.id
-}
-
-resource "azurerm_subnet_network_security_group_association" "basicnsg-to-bastionsubnet" {
-  subnet_id                 = azurerm_subnet.bastion_subnet.id
   network_security_group_id = azurerm_network_security_group.basicnsg.id
 }
 
@@ -218,28 +213,31 @@ resource "azurerm_key_vault" "app-openai-keyvault" {
     azurerm_resource_group.rg,
   ]
 
-   access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
 
-    key_permissions = [
-      "Create",
-      "Delete",
-      "Get",
-      "Purge",
-      "Recover",
-      "Update",
-      "GetRotationPolicy",
-      "SetRotationPolicy"
-    ]
-
-    secret_permissions = [
-      "Set",
-    ]
-  }
   
 }
 
+resource "azurerm_role_assignment" "keyvault_access" {
+  scope                      = azurerm_key_vault.app-openai-keyvault.id
+  role_definition_name       = "Key Vault Administrator"
+  principal_id               = data.azurerm_client_config.current.object_id
+
+  depends_on = [
+    azurerm_key_vault.app-openai-keyvault,
+  ]
+}
+
+
+
+resource "azurerm_key_vault_secret" "vmpw" {
+  name         = "adminpw"
+  value        = random_password.password.result
+  key_vault_id = azurerm_key_vault.app-openai-keyvault.id
+
+  depends_on = [
+    azurerm_role_assignment.keyvault_access,
+  ]
+}
 
 resource "random_id" "random_id" {
   keepers = {
@@ -248,12 +246,6 @@ resource "random_id" "random_id" {
   }
 
   byte_length = 8
-}
-
-resource "azurerm_key_vault_secret" "vmpw" {
-  name         = "adminpw"
-  value        = random_password.password.result
-  key_vault_id = azurerm_key_vault.app-openai-keyvault.id
 }
 
 resource "azurerm_api_management" "apim" {
@@ -295,7 +287,6 @@ resource "azurerm_private_endpoint" "keyvault-private-endpoint" {
     is_manual_connection           = false
     name                           = "keyvault-pvtendpoint"
     private_connection_resource_id = azurerm_key_vault.app-openai-keyvault.id
-    subresource_names              = ["keyvault"]
   }
   depends_on = [
     azurerm_key_vault.app-openai-keyvault,
