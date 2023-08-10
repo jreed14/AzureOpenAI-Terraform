@@ -11,7 +11,7 @@ resource "azurerm_virtual_network" "ai_workloads_vnet" {
 
 }
 
-resource "azure_network_security_group" "basicnsg" {
+resource "azurerm_network_security_group" "basicnsg" {
   name                = "${var.prefix}-basicnsg"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
