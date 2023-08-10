@@ -71,7 +71,7 @@ address_prefixes     = ["10.0.5.0/24"]
 }
 
 resource "azurerm_subnet_network_security_group_association" "basicnsg-to-computesubnet" {
-  subnet_id                 = azurerm_subnet.compute.id
+  subnet_id                 = azurerm_subnet.computesubnet.id
   network_security_group_id = azurerm_network_security_group.basicnsg.id
 }
 
