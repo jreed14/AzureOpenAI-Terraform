@@ -11,6 +11,14 @@ resource "azurerm_virtual_network" "ai_workloads_vnet" {
 
 }
 
+resource "azure_network_security_group" "basicnsg" {
+  name                = "${var.prefix}-basicnsg"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+}
+
+
 resource "azurerm_subnet" "service" {
  name                 = "service"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -60,6 +68,45 @@ address_prefixes     = ["10.0.5.0/24"]
 
   private_link_service_network_policies_enabled = true
 
+}
+
+resource "azurerm_subnet_network_security_group_association" "basicnsg-to-computesubnet" {
+  subnet_id                 = azurerm_subnet.compute.id
+  network_security_group_id = azurerm_network_security_group.basicnsg.id
+}
+
+resource "azurerm_subnet_network_security_group_association" "basicnsg-to-servicesubnet" {
+  subnet_id                 = azurerm_subnet.service.id
+  network_security_group_id = azurerm_network_security_group.basicnsg.id
+}
+
+resource "azurerm_subnet_network_security_group_association" "basicnsg-to-endpointsubnet" {
+  subnet_id                 = azurerm_subnet.endpoint.id
+  network_security_group_id = azurerm_network_security_group.basicnsg.id
+}
+
+resource "azurerm_subnet_network_security_group_association" "basicnsg-to-bastionsubnet" {
+  subnet_id                 = azurerm_subnet.bastion_subnet.id
+  network_security_group_id = azurerm_network_security_group.basicnsg.id
+}
+
+resource "azurerm_subnet_network_security_group_association" "basicnsg-to-apimsubnet" {
+  subnet_id                 = azurerm_subnet.APIManagementSubnet.id
+  network_security_group_id = azurerm_network_security_group.basicnsg.id
+}
+
+
+ resource "azurerm_private_dns_zone" "private_zone_ai_vnet" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = azurerm_resource_group.rg.name
+
+ }
+
+resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_AI-vnet" {
+  name                  = "virtual-network-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.private_zone_ai_vnet.name
+  virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
 }
 
 
@@ -170,24 +217,28 @@ resource "azurerm_key_vault" "app-openai-keyvault" {
   depends_on = [
     azurerm_resource_group.rg,
   ]
+
+   access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "Create",
+      "Delete",
+      "Get",
+      "Purge",
+      "Recover",
+      "Update",
+      "GetRotationPolicy",
+      "SetRotationPolicy"
+    ]
+
+    secret_permissions = [
+      "Set",
+    ]
+  }
   
 }
-
-
-
- resource "azurerm_private_dns_zone" "private_zone_ai_vnet" {
-  name                = "privatelink.blob.core.windows.net"
-  resource_group_name = azurerm_resource_group.rg.name
-
- }
-
-resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_AI-vnet" {
-  name                  = "virtual-network-dns-link"
-  resource_group_name   = azurerm_resource_group.rg.name
-  private_dns_zone_name = azurerm_private_dns_zone.private_zone_ai_vnet.name
-  virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
-}
-
 
 
 resource "random_id" "random_id" {
@@ -199,12 +250,18 @@ resource "random_id" "random_id" {
   byte_length = 8
 }
 
+resource "azurerm_key_vault_secret" "vmpw" {
+  name         = "adminpw"
+  value        = random_password.password.result
+  key_vault_id = azurerm_key_vault.app-openai-keyvault.id
+}
+
 resource "azurerm_api_management" "apim" {
   name                = "${var.prefix}-apim-${random_id.random_id.hex}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  publisher_name      = "${var.publisher_name}"
-  publisher_email     = "${var.publisher_email}"
+  publisher_name      = "Contoso"
+  publisher_email     = "john.doe@contoso.com"
 
   sku_name = "Developer_1"
 }
@@ -228,3 +285,19 @@ resource "azurerm_private_endpoint" "openai-private-endpoint" {
   ]
 }
 
+resource "azurerm_private_endpoint" "keyvault-private-endpoint" {
+  custom_network_interface_name = "keyvault-pvtendpoint-nic"
+  location                      =  azurerm_resource_group.rg.location
+  name                          = "keyvault-pvtendpoint"
+  resource_group_name           = azurerm_resource_group.rg.name
+  subnet_id                     = azurerm_subnet.endpoint.id
+  private_service_connection {
+    is_manual_connection           = false
+    name                           = "keyvault-pvtendpoint"
+    private_connection_resource_id = azurerm_key_vault.app-openai-keyvault.id
+    subresource_names              = ["keyvault"]
+  }
+  depends_on = [
+    azurerm_key_vault.app-openai-keyvault,
+  ]
+}
