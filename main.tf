@@ -19,23 +19,15 @@ resource "azurerm_network_security_group" "basicnsg" {
 }
 
 
-resource "azurerm_subnet" "service" {
- name                 = "service"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
-
-  private_link_service_network_policies_enabled = true
-}
-
 resource "azurerm_subnet" "endpoint" {
-  name                 = "service"
+ name                 = "endpoint"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
   address_prefixes     = ["10.0.2.0/24"]
 
   private_link_service_network_policies_enabled = true
 }
+
 
 resource "azurerm_subnet" "bastion_subnet" {
 name                   = "AzureBastionSubnet"
@@ -75,10 +67,6 @@ resource "azurerm_subnet_network_security_group_association" "basicnsg-to-comput
   network_security_group_id = azurerm_network_security_group.basicnsg.id
 }
 
-resource "azurerm_subnet_network_security_group_association" "basicnsg-to-servicesubnet" {
-  subnet_id                 = azurerm_subnet.service.id
-  network_security_group_id = azurerm_network_security_group.basicnsg.id
-}
 
 resource "azurerm_subnet_network_security_group_association" "basicnsg-to-endpointsubnet" {
   subnet_id                 = azurerm_subnet.endpoint.id
@@ -277,18 +265,18 @@ resource "azurerm_private_endpoint" "openai-private-endpoint" {
   ]
 }
 
-resource "azurerm_private_endpoint" "keyvault-private-endpoint" {
-  custom_network_interface_name = "keyvault-pvtendpoint-nic"
-  location                      =  azurerm_resource_group.rg.location
-  name                          = "keyvault-pvtendpoint"
-  resource_group_name           = azurerm_resource_group.rg.name
-  subnet_id                     = azurerm_subnet.endpoint.id
-  private_service_connection {
-    is_manual_connection           = false
-    name                           = "keyvault-pvtendpoint"
-    private_connection_resource_id = azurerm_key_vault.app-openai-keyvault.id
-  }
-  depends_on = [
-    azurerm_key_vault.app-openai-keyvault,
-  ]
-}
+# resource "azurerm_private_endpoint" "keyvault-private-endpoint" {
+#  custom_network_interface_name = "keyvault-pvtendpoint-nic"
+#  location                      =  azurerm_resource_group.rg.location
+#  name                          = "keyvault-pvtendpoint"
+#  resource_group_name           = azurerm_resource_group.rg.name
+#  subnet_id                     = azurerm_subnet.endpoint.id
+#  private_service_connection {
+#    is_manual_connection           = false
+#    name                           = "keyvault-pvtendpoint"
+#    private_connection_resource_id = azurerm_key_vault.app-openai-keyvault.id
+#  }
+#  depends_on = [
+#    azurerm_key_vault.app-openai-keyvault,
+#  ]
+#}
