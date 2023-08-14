@@ -12,8 +12,6 @@ To deploy the Azure Open AI recommended infrastructure:
 3. Run `terraform apply` to view infrastructure that 
 4. Add variables
     - Prefix - usually 3-5 characters that will be appended to all resources. Follow your organizations naming convention 
-    - Publisher Email - email used for API publisher/company (API Management required attribute)
-    - Publisher Name - name of the API publisher/company (API Management required attribute)
 5. Review created infrastructure 
 6. Type yes to start the build
 
