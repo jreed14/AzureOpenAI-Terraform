@@ -6,8 +6,7 @@ This Github repository provides a quick start template to deploy receommended in
 * [Azure Subscription](https://azure.microsoft.com/en-us/get-started/)
 * [Terraform](https://learn.microsoft.com/en-us/azure/developer/terraform/quickstart-configure) 
 * [Azure Open AI Access](https://customervoice.microsoft.com/Pages/ResponsePage.aspx?id=v4j5cvGGr0GRqy180BHbR7en2Ais5pxKtso_Pz4b1_xUOFA5Qk1UWDRBMjg0WFhPMkIzTzhKQ1dWNyQlQCN0PWcu)
-
-## Infrastucture deployed    
+  
 
 ## Getting Started
 
