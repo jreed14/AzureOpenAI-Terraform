@@ -26,6 +26,7 @@ To deploy the Azure Open AI recommended infrastructure via Terraform:
     * API Management Subnet
     * Compute Subnet 
     * Private Endpoints Subnet
+* Private DNS Zone
 * Azure Open AI Instance
     * Private endpoint enabled
 * Azure Bastion Service
@@ -33,3 +34,8 @@ To deploy the Azure Open AI recommended infrastructure via Terraform:
 * Key Vault
 * API Management
 
+![alt text](https://github.com/jreed14/AzureOpenAI-Terraform/blob/appinsights-folderstructure/azure-openai-monitor-log.jpg)
+
+## Post Deployment Steps
+* Add Azure Open AI Definition to API Management
+* Add Logger for app insights
