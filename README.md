@@ -34,7 +34,7 @@ To deploy the Azure Open AI recommended infrastructure via Terraform:
 * Key Vault
 * API Management
 
-![alt text](https://github.com/jreed14/AzureOpenAI-Terraform/blob/appinsights-folderstructure/azure-openai-monitor-log.jpg)
+![alt text](https://github.com/jreed14/AzureOpenAI-Terraform/blob/main/azure-openai-monitor-log.jpg)
 
 ## Post Deployment Steps
 * Add Azure Open AI Definition to API Management
