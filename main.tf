@@ -270,6 +270,24 @@ resource "azurerm_private_endpoint" "openai-private-endpoint" {
   ]
 }
 
+resource "azurerm_log_analytics_workspace" "la-workspace" {
+  name                = "la-worskpace"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+resource "azurerm_application_insights" "appinsights" {
+  name                = "apim-test-appinsights"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  application_type    = "web"
+}
+
+
+
+
 # resource "azurerm_private_endpoint" "keyvault-private-endpoint" {
 #  custom_network_interface_name = "keyvault-pvtendpoint-nic"
 #  location                      =  azurerm_resource_group.rg.location
