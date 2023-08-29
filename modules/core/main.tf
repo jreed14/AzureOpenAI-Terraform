@@ -139,34 +139,10 @@ resource "azurerm_network_interface" "main" {
   }
 }
 
-resource "azurerm_bastion_host" "bastion_host" {
-  name                = "azurebastion"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                 = "configuration"
-    subnet_id            = azurerm_subnet.bastion_subnet.id
-    public_ip_address_id = azurerm_public_ip.bastion_pub_ip.id
-  }
-   depends_on = [
-    azurerm_subnet.bastion_subnet,
-    azurerm_public_ip.bastion_pub_ip,
-  ]
-
-}
-
-resource "azurerm_public_ip" "bastion_pub_ip" {
-  name                = "bastion_pubip"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-}
 
 
 resource "azurerm_cognitive_account" "openai" {
-  custom_subdomain_name         = "openai-tf-build"
+  custom_subdomain_name         = "${var.prefix}-openai-tf-build"
   kind                          = "OpenAI"
   location                      = "eastus"
   name                          = "openai-tf-build"
@@ -288,18 +264,4 @@ resource "azurerm_application_insights" "appinsights" {
 
 
 
-# resource "azurerm_private_endpoint" "keyvault-private-endpoint" {
-#  custom_network_interface_name = "keyvault-pvtendpoint-nic"
-#  location                      =  azurerm_resource_group.rg.location
-#  name                          = "keyvault-pvtendpoint"
-#  resource_group_name           = azurerm_resource_group.rg.name
-#  subnet_id                     = azurerm_subnet.endpoint.id
-#  private_service_connection {
-#    is_manual_connection           = false
-#    name                           = "keyvault-pvtendpoint"
-#    private_connection_resource_id = azurerm_key_vault.app-openai-keyvault.id
-#  }
-#  depends_on = [
-#    azurerm_key_vault.app-openai-keyvault,
-#  ]
-#}
+

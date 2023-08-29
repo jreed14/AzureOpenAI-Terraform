@@ -28,3 +28,11 @@ output "app_id" {
 output "bastion_subnet" {
   value = azurerm_subnet.bastion_subnet.id
 }
+
+output "endpoint_subnet" {
+  value = azurerm_subnet.endpoint.id
+}
+
+output "keyvault_id" {
+  value = azurerm_key_vault.app-openai-keyvault.id
+}

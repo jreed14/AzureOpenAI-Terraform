@@ -1,4 +1,4 @@
-modules "core" {
-  source = "modules/core"
+module "core" {
+  source = "./modules/core"
 
 }

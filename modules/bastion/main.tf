@@ -9,7 +9,7 @@ resource "azurerm_bastion_host" "bastion_host" {
     public_ip_address_id = azurerm_public_ip.bastion_pub_ip.id
   }
    depends_on = [
-        azurerm_public_ip.bastion_pub_ip,
+        module.core,
   ]
 
 }
