@@ -4,7 +4,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_virtual_network" "ai_workloads_vnet" {
-  name                         = "azucdre_openai_network"
+  name                         = "azure_openai_network"
   address_space                = ["10.0.0.0/16"]
   location                     = azurerm_resource_group.rg.location
   resource_group_name          = azurerm_resource_group.rg.name
@@ -174,7 +174,7 @@ resource "azurerm_cognitive_account" "openai" {
   custom_subdomain_name         = "${var.prefix}-openai-tf-build"
   kind                          = "OpenAI"
   location                      = "eastus"
-  name                          = "openai-tf-build"
+  name                          = "${var.prefix}-openai-tf-build"
   public_network_access_enabled = false
   resource_group_name           = azurerm_resource_group.rg.name
   sku_name                      = "S0"
