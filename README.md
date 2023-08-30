@@ -39,3 +39,4 @@ To deploy the Azure Open AI recommended infrastructure via Terraform:
 ## Post Deployment Steps
 * Add Azure Open AI Definition to API Management
 * Add Logger for app insights
+* Disable public access to keyvault
