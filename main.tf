@@ -92,6 +92,35 @@ resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_AI-vnet" 
   virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
 }
 
+resource "azurerm_bastion_host" "bastion_host" {
+  name                = "azurebastion"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                 = "configuration"
+    subnet_id            = azurerm_subnet.bastion_subnet.id
+    public_ip_address_id = azurerm_public_ip.bastion_pub_ip.id
+  }
+   depends_on = [
+        azurerm_virtual_network.ai_workloads_vnet,
+        azurerm_subnet.bastion_subnet,
+    
+  ]
+
+}
+
+resource "azurerm_public_ip" "bastion_pub_ip" {
+  name                = "bastion_pubip"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+
+
+
 
 resource "azurerm_windows_virtual_machine" "main" {
   name                  = "${var.prefix}-vm"
@@ -139,37 +168,13 @@ resource "azurerm_network_interface" "main" {
   }
 }
 
-resource "azurerm_bastion_host" "bastion_host" {
-  name                = "azurebastion"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                 = "configuration"
-    subnet_id            = azurerm_subnet.bastion_subnet.id
-    public_ip_address_id = azurerm_public_ip.bastion_pub_ip.id
-  }
-   depends_on = [
-    azurerm_subnet.bastion_subnet,
-    azurerm_public_ip.bastion_pub_ip,
-  ]
-
-}
-
-resource "azurerm_public_ip" "bastion_pub_ip" {
-  name                = "bastion_pubip"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-}
 
 
 resource "azurerm_cognitive_account" "openai" {
-  custom_subdomain_name         = "openai-tf-build"
+  custom_subdomain_name         = "${var.prefix}-openai-tf-build"
   kind                          = "OpenAI"
   location                      = "eastus"
-  name                          = "openai-tf-build"
+  name                          = "${var.prefix}-openai-tf-build"
   public_network_access_enabled = false
   resource_group_name           = azurerm_resource_group.rg.name
   sku_name                      = "S0"
@@ -232,6 +237,54 @@ resource "azurerm_key_vault_secret" "vmpw" {
   ]
 }
 
+resource "azurerm_private_dns_zone" "vault_dns_zone" {
+  name                          = "privatelink.vaultcore.azure.net"
+  resource_group_name           = azurerm_resource_group.rg.name
+}
+
+
+resource "azurerm_private_endpoint" "keyvault-private-endpoint" {
+   custom_network_interface_name = "keyvault-pvtendpoint-nic"
+   location                      = azurerm_resource_group.rg.location
+   name                          = "keyvault-pvtendpoint"
+   resource_group_name           = azurerm_resource_group.rg.name
+   subnet_id                     = azurerm_subnet.endpoint.id
+   
+   
+   private_service_connection {
+     is_manual_connection           = false
+     name                           = "keyvault-pvtendpoint"
+     private_connection_resource_id = azurerm_key_vault.app-openai-keyvault.id
+     subresource_names              = ["Vault"]
+    }
+
+  private_dns_zone_group {
+    name                          = "vaultdnszonegroup"
+    private_dns_zone_ids          = [azurerm_private_dns_zone.vault_dns_zone.id]
+  }
+
+  depends_on = [
+    azurerm_key_vault.app-openai-keyvault, 
+    azurerm_virtual_network.ai_workloads_vnet,
+    azurerm_subnet.endpoint,
+    azurerm_key_vault_secret.vmpw,
+    azurerm_role_assignment.keyvault_access,
+    azurerm_private_dns_zone.vault_dns_zone
+  ]
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_vault" {
+  name                  = "virtual-network-dns-link_vault"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.vault_dns_zone.name
+  virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
+
+depends_on = [
+  azurerm_private_dns_zone.vault_dns_zone
+]
+
+}
+
 resource "random_id" "random_id" {
   keepers = {
     # Generate a new ID only when a new resource group is defined
@@ -288,18 +341,4 @@ resource "azurerm_application_insights" "appinsights" {
 
 
 
-# resource "azurerm_private_endpoint" "keyvault-private-endpoint" {
-#  custom_network_interface_name = "keyvault-pvtendpoint-nic"
-#  location                      =  azurerm_resource_group.rg.location
-#  name                          = "keyvault-pvtendpoint"
-#  resource_group_name           = azurerm_resource_group.rg.name
-#  subnet_id                     = azurerm_subnet.endpoint.id
-#  private_service_connection {
-#    is_manual_connection           = false
-#    name                           = "keyvault-pvtendpoint"
-#    private_connection_resource_id = azurerm_key_vault.app-openai-keyvault.id
-#  }
-#  depends_on = [
-#    azurerm_key_vault.app-openai-keyvault,
-#  ]
-#}
+
