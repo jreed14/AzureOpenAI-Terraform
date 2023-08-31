@@ -312,12 +312,19 @@ resource "azurerm_private_endpoint" "openai-private-endpoint" {
   name                          = "openai-pvtendpoint"
   resource_group_name           = azurerm_resource_group.rg.name
   subnet_id                     = azurerm_subnet.endpoint.id
+  
   private_service_connection {
     is_manual_connection           = false
     name                           = "openai-pvtendpoint"
     private_connection_resource_id = azurerm_cognitive_account.openai.id
     subresource_names              = ["account"]
   }
+
+private_dns_zone_group {
+    name                          = "openaidnszonegroup"
+    private_dns_zone_ids          = [azurerm_private_dns_zone.private_zone_ai_vnet.id]
+  }
+
   depends_on = [
     azurerm_cognitive_account.openai,
   ]
