@@ -43,9 +43,9 @@ address_prefixes     = ["10.0.3.0/24"]
 resource "azurerm_subnet" "APIManagementSubnet" {
 name                   = "APIManagementSubnet"
 resource_group_name    = azurerm_resource_group.rg.name
-virtual_network_name = azurerm_virtual_network.ai_workloads_vnet.name
+virtual_network_name   = azurerm_virtual_network.ai_workloads_vnet.name
 
-address_prefixes     = ["10.0.4.0/24"]
+address_prefixes       = ["10.0.4.0/24"]
 
   private_link_service_network_policies_enabled = true
 
@@ -80,16 +80,29 @@ resource "azurerm_subnet_network_security_group_association" "basicnsg-to-apimsu
 
 
  resource "azurerm_private_dns_zone" "private_zone_ai_vnet" {
-  name                = "privatelink.blob.core.windows.net"
-  resource_group_name = azurerm_resource_group.rg.name
-
+  name                 = "privatelink.openai.azure.com"
+  resource_group_name  = azurerm_resource_group.rg.name
+  
  }
+
+#resource "azurerm_private_dns_a_record" "aoai-dns-pvt-link" {
+#  name                 = "aoai-pvt-link"
+#  zone_name            = join (".", [azurerm_cognitive_account.openai.custom_subdomain_name, azurerm_private_dns_zone.private_zone_ai_vnet.name]) 
+#  ttl                  = 300
+#  records              =  azurerm_private_endpoint.openai-private-endpoint.private_ip_address
+#
+# depends_on = [
+#   azurerm_private_dns_zone.private_zone_ai_vnet,
+#   azurerm_private_endpoint.openai-private-endpoint
+#]
+#}
 
 resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link_to_AI-vnet" {
   name                  = "virtual-network-dns-link"
   resource_group_name   = azurerm_resource_group.rg.name
   private_dns_zone_name = azurerm_private_dns_zone.private_zone_ai_vnet.name
   virtual_network_id    = azurerm_virtual_network.ai_workloads_vnet.id
+  registration_enabled = true
 }
 
 resource "azurerm_bastion_host" "bastion_host" {
@@ -171,10 +184,10 @@ resource "azurerm_network_interface" "main" {
 
 
 resource "azurerm_cognitive_account" "openai" {
-  custom_subdomain_name         = "${var.prefix}-openai-tf-build"
+  custom_subdomain_name         = "${var.prefix}-openai"
   kind                          = "OpenAI"
   location                      = "eastus"
-  name                          = "${var.prefix}-openai-tf-build"
+  name                          = "${var.prefix}-openai"
   public_network_access_enabled = false
   resource_group_name           = azurerm_resource_group.rg.name
   sku_name                      = "S0"

@@ -40,3 +40,7 @@ output "keyvault_id" {
 output "prefix" {
   value = "${var.prefix}"  
 }
+
+#output "aoai-endpoint-ip" {
+#   value = azurerm_private_endpoint.openai-private-endpoint.private_service_connection.private_ip_address
+#}
